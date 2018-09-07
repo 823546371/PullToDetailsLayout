@@ -1,34 +1,55 @@
-package com.jwenfeng.library
+# PullToDetailsLayout 仿京东天猫上拉加载详情
 
-import android.content.Context
-import android.util.AttributeSet
-import android.view.*
-import android.widget.Scroller
+## 使用步骤
 
-/**
- * 当前类注释:
- * 作者：jinwenfeng on 2018/9/6 15:33
- * 邮箱：823546371@qq.com
- * QQ： 823546371
- * 公司：南京穆尊信息科技有限公司
- * © 2017 jinwenfeng
- * © 版权所有，未经允许不得传播
- */
+1. 引入 PullToDetailsLayout 
+``` 
+implementation 'com.jwenfeng.library:PullToDetails:1.0.0'
+```
+2. 使用 PullToDetailsLayout 
+
+``` xml
+<com.jwenfeng.library.PullToDetailsLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:overScrollMode="never">
+    </ScrollView>
+    
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:overScrollMode="never">
+    </ScrollView>
+    
+</com.jwenfeng.library.PullToDetailsLayout>
+```
+> 只能放入两个 View 支持 ScrollView、ListView、RecyclerView 等
+
+3. 滚动监听
+
+``` kotlin
+main_pull_to_details.onPageChangeListener = object:PullToDetailsLayout.OnPageChangeListener{
+    override fun onChange(status: Int) {
+        Log.d("MainActivity","status:$status")
+    }
+}
+```
+
+
+## 实现原理
+1. 自定义一个Layout 继承 ViewGroup
+
+``` kotlin
 class PullToDetailsLayout:ViewGroup {
-
-    // 最小滑动距离
+     // 最小滑动距离
     private var mTouchSlop = 0
     private var velocityTracker: VelocityTracker
     private var scroller: Scroller
-
-    private lateinit var mFrontView: View
-    private lateinit var mBehindView: View
-
-    // 0：第一页 1：第二页
-    private var status = 0
-    private var lastY = 0
-    private val speed = 200
-
+    
     constructor(context: Context) : this(context, null)
 
     constructor(context: Context, attributeSet: AttributeSet?) : this(context, attributeSet, 0)
@@ -38,16 +59,16 @@ class PullToDetailsLayout:ViewGroup {
         velocityTracker = VelocityTracker.obtain()
         scroller = Scroller(context)
     }
+}
+```
 
-    override fun onFinishInflate() {
-        super.onFinishInflate()
-        if (childCount != 2) {
-            throw RuntimeException("child view only support two!!")
-        }
-        mFrontView = getChildAt(0)
-        mBehindView = getChildAt(1)
-    }
+2. 测量 Layout 的大小，设置子 View 的大小和自身一样大
 
+``` kotlin
+class PullToDetailsLayout:ViewGroup {
+     
+    ...
+    
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         // 获取父布局的大小
         val rootWidth = MeasureSpec.getSize(widthMeasureSpec)
@@ -65,9 +86,18 @@ class PullToDetailsLayout:ViewGroup {
             measureChild(childView, childWidthMeasureSpec, childHeightMeasureSpec)
         }
         setMeasuredDimension(rootWidth, rootHeight)
-
     }
+    
+}
+```
 
+3. 让子 View 重新布局，从上到下分布
+
+``` kotlin
+class PullToDetailsLayout:ViewGroup {
+     
+    ...
+    
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         var top = t
         for (i in 0 until childCount) {
@@ -81,13 +111,26 @@ class PullToDetailsLayout:ViewGroup {
             top += childView.measuredHeight
         }
     }
+    
+}
+```
 
-    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
-        //防止子View禁止父view拦截事件
-        this.requestDisallowInterceptTouchEvent(false);
-        return super.dispatchTouchEvent(ev)
-    }
+4. 触摸事件分发
 
+> `onInterceptTouchEvent` 用来判断是否拦截某个事件，如果当前的 View 拦截了某个事件，那么在同一个事件序列中，此方法不会再次被调用。返回结果表示是否拦截当前事件。
+
+ 在这里我们需要判断第一页的 View 是否可以向上继续滑动，如果第一页的 View 不能继续滑动，那么自身 View 就需要拦截当前事件处理滑动；
+ 
+ 同理我们也需要判断第二页的 View 是否可以向下继续滑动，如不能滑动那么自身的 View 就需要拦截当前事件来处理滑动。
+ 
+ ``` kotlin
+ class PullToDetailsLayout:ViewGroup {
+     
+    ...
+    // 0：第一页 1：第二页
+    private var status = 0
+    private var lastY = 0
+    
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
         var shouldIntercept = false
         val y = ev.y.toInt()
@@ -116,7 +159,21 @@ class PullToDetailsLayout:ViewGroup {
         }
         return shouldIntercept
     }
+    
+}
+ ```
+ 
+5. 处理滑动
 
+父 View 获取到滑动通过 `scrollBy()`  方法进行滑动，这里 `dy /= 3` 是增加滑动的弹性
+
+当手指离屏幕的时候根据滑动速度来决定是回弹到第一页还是第二页，通过 `velocityTracker.yVelocity` 来获取Y轴的滑动速度。
+
+
+``` kotlin
+class PullToDetailsLayout:ViewGroup {
+     
+    ...
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         val y = ev.y.toInt()
         velocityTracker.addMovement(ev)
@@ -172,4 +229,22 @@ class PullToDetailsLayout:ViewGroup {
             postInvalidate()
         }
     }
+    
 }
+```
+
+完整代码详见GitHub：[PullToDetailsLayout 仿京东天猫上拉加载详情](https://github.com/823546371/PullToDetailsLayout)
+
+
+---
+
+
+## 微信公众号
+
+<center>
+
+![微信公众号](http://blog-qiniu.jwenfeng.com/2018090715362903281413.jpg)
+
+佛系开发
+
+</center>

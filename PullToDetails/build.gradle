@@ -32,10 +32,23 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
 
 }
 repositories {
     mavenCentral()
+}
+
+/** 以下开始是将Android Library上传到jcenter的相关配置**/
+
+apply plugin: 'com.novoda.bintray-release' // 添加bintray插件
+publish {
+    userOrg = 'jwf19921123'             // Binary用户名
+    repoName = 'maven'          // Binary上的刚才新建的仓库名（Repository）
+    groupId = 'com.jwenfeng.library'        // 依赖名compile 'x:y:z'中的包名x
+    artifactId = 'PullToDetails'        // 依赖名compile 'x:y:z'中的项目名y
+    publishVersion = '1.0.0'          // 依赖名compile 'x:y:z'中的版本号z
+    desc = 'This is a pull-to-details-layout framework for android'            // 对该开源组件的说明
+    website = 'https://github.com/823546371/PullToDetailsLayout'  // VCS地址，即填写项目上传的Github地址
 }
