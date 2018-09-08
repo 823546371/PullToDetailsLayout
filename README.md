@@ -1,5 +1,9 @@
 # PullToDetailsLayout 仿京东天猫上拉加载详情
 
+## 有图有真相
+
+<img src="Screenshot/pic.gif"  />
+
 ## 使用步骤
 
 1. 引入 PullToDetailsLayout 
@@ -241,10 +245,6 @@ class PullToDetailsLayout:ViewGroup {
 
 ## 微信公众号
 
-<center>
 
-![微信公众号](http://blog-qiniu.jwenfeng.com/2018090715362903281413.jpg)
-
+<img src="Screenshot/qrcode.jpg"/>
 佛系开发
-
-</center>
