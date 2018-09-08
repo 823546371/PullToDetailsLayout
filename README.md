@@ -2,7 +2,7 @@
 
 ## 有图有真相
 
-<img src="Screenshot/pic.gif"  />
+![20180908153637620554347.gif](http://blog-qiniu.jwenfeng.com/20180908153637620554347.gif)
 
 ## 使用步骤
 
